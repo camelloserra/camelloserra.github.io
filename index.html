@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prohibido No Jugar</title>
+  <meta name="description" content="Juegos gratis para jugar en el navegador. Prohibido no jugar.">
+  <link rel="icon" href="img/icono.png">
+  <link rel="apple-touch-icon" href="img/icono.png">
+  <meta property="og:title" content="Prohibido No Jugar">
+  <meta property="og:description" content="Juegos gratis para jugar en el navegador.">
+  <meta property="og:image" content="img/logo.jpg">
+
+  <!-- GOOGLE ADSENSE: cuando te aprueben, pegá acá el script que te da Google -->
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #fff;
+      color: #111;
+      font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+    }
+
+    /* Estructura: publicidad | contenido | publicidad */
+    .pagina {
+      display: grid;
+      grid-template-columns: 1fr minmax(0, 980px) 1fr;
+      gap: 24px;
+      min-height: 100vh;
+    }
+
+    .lateral {
+      display: flex;
+      justify-content: center;
+      padding-top: 180px;
+    }
+    /* Espacio reservado para anuncios verticales (160x600 o 300x600) */
+    .anuncio {
+      position: sticky;
+      top: 24px;
+      width: 160px;
+      min-height: 600px;
+    }
+
+    main { padding: 0 16px 60px; }
+
+    header { text-align: center; padding: 28px 0 12px; }
+    header img { width: min(420px, 85vw); height: auto; mix-blend-mode: multiply; }
+
+    .bajada {
+      text-align: center;
+      font-size: 1.05rem;
+      color: #555;
+      margin-bottom: 32px;
+    }
+
+    /* Grilla de juegos: se acomoda sola y los nuevos aparecen abajo */
+    .juegos {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 28px;
+    }
+
+    .juego {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      border: 3px solid #111;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 5px 5px 0 #111;
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .juego:hover, .juego:focus-visible {
+      transform: translate(-3px, -3px) rotate(-1deg);
+      box-shadow: 8px 8px 0 #111;
+      outline: none;
+    }
+    .juego:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #111; }
+
+    .miniatura {
+      aspect-ratio: 16 / 10;
+      width: 100%;
+      object-fit: cover;
+      display: block;
+      border-bottom: 3px solid #111;
+    }
+    /* Tarjeta de color cuando todavía no hay imagen */
+    .miniatura.sin-imagen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      font-size: 1.5rem;
+      font-weight: 800;
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    .titulo {
+      padding: 12px 14px;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    footer {
+      text-align: center;
+      color: #888;
+      font-size: .9rem;
+      padding: 48px 0 0;
+    }
+
+    /* En pantallas angostas se ocultan los laterales */
+    @media (max-width: 1300px) {
+      .pagina { grid-template-columns: minmax(0, 1fr); }
+      .lateral { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="pagina">
+    <aside class="lateral"><div class="anuncio" id="anuncio-izquierda"><!-- anuncio --></div></aside>
+
+    <main>
+      <header>
+        <h1><img src="img/logo.jpg" alt="Prohibido No Jugar"></h1>
+      </header>
+      <p class="bajada">Elegí un juego y apretá para jugar.</p>
+
+      <section class="juegos" id="juegos"></section>
+
+      <footer>© <span id="anio"></span> Prohibido No Jugar</footer>
+    </main>
+
+    <aside class="lateral"><div class="anuncio" id="anuncio-derecha"><!-- anuncio --></div></aside>
+  </div>
+
+  <script src="juegos.js"></script>
+  <script>
+    const colores = ["#FFD84D", "#5FB8FF", "#FF6B6B", "#7EE081", "#C9A7FF", "#FFA94D"];
+    const contenedor = document.getElementById("juegos");
+
+    JUEGOS.forEach((juego, i) => {
+      const a = document.createElement("a");
+      a.className = "juego";
+      a.href = juego.url;
+
+      let mini;
+      if (juego.imagen) {
+        mini = document.createElement("img");
+        mini.src = "img/juegos/" + juego.imagen;
+        mini.alt = juego.titulo;
+        mini.loading = "lazy";
+      } else {
+        mini = document.createElement("div");
+        mini.classList.add("sin-imagen");
+        mini.style.background = colores[i % colores.length];
+        mini.textContent = juego.titulo;
+      }
+      mini.classList.add("miniatura");
+
+      const titulo = document.createElement("div");
+      titulo.className = "titulo";
+      titulo.textContent = juego.titulo;
+
+      a.append(mini, titulo);
+      contenedor.append(a);
+    });
+
+    document.getElementById("anio").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
