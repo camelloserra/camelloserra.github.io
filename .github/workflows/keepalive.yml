@@ -1,0 +1,17 @@
+name: Mantener activos los récords
+
+on:
+  schedule:
+    - cron: "17 12 */3 * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Consultar el ranking
+        run: |
+          curl -fsS -X POST "https://fzmuhwrwupofvrmtsawt.supabase.co/rest/v1/rpc/get_ranking" \
+            -H "apikey: sb_publishable_wTc2hxiXymgBmynOf7vKYQ_7ygccIke" \
+            -H "Content-Type: application/json" \
+            -d '{"p_game":"help-the-cow"}'
