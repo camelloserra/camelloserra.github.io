@@ -11,8 +11,7 @@
 */
 
 const JUEGOS = [
-  { titulo: "Pelusart",                url: "/pelusart/",                imagen: "pelusart.jpg" },
-  { titulo: "Miyagi Catch",            url: "/miyagi-catch/",            imagen: "miyagi-catch.jpg" },
+  { titulo: "Chopstick Catch",         url: "/chopstick-catch/",         imagen: "chopstick-catch.jpg" },
   { titulo: "MEM😉JITEST",             url: "/memojitest/",              imagen: "memojitest.jpg" },
   { titulo: "Escape from the Libyans", url: "/escape.from.the.libyans/", imagen: "escape.from.the.libyans.jpg" },
   { titulo: "Help the Cow",            url: "/help.the.cow/",            imagen: "help.the.cow.jpg" },
