@@ -34,6 +34,16 @@
     ranking(game, mode = '', name = null) {
       return rpc('get_ranking', { p_game: game, p_mode: mode, p_name: name ? cleanName(name) : null });
     },
+    /* --- "me gusta" de los juegos (home) --- */
+    async likes() {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/game_likes?select=game,likes`, { headers: { apikey: SUPABASE_KEY } });
+      if (!r.ok) throw new Error(r.status);
+      const out = {}; (await r.json()).forEach(x => { out[x.game] = x.likes; }); return out;
+    },
+    like(game, delta) { return rpc('like_game', { p_game: game, p_delta: delta }); },
+    likedSet() { try { return new Set(JSON.parse(localStorage.getItem('pnj_liked') || '[]')); } catch (e) { return new Set(); } },
+    saveLiked(set) { try { localStorage.setItem('pnj_liked', JSON.stringify([...set])); } catch (e) {} },
+
     submit(game, mode, name, score) {
       return rpc('submit_score', { p_game: game, p_mode: mode || '', p_name: cleanName(name), p_score: score });
     },
