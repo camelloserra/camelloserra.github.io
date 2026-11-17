@@ -17,4 +17,5 @@ const JUEGOS = [
   { titulo: "Escape from the Libyans", bajada: "Acelera esquivando obstáculos.",         url: "/escape.from.the.libyans/", imagen: "escape.from.the.libyans.jpg" },
   { titulo: "Help the Cow",            bajada: "Ayuda a la vaca y sus vaquitas.",      url: "/help.the.cow/",            imagen: "help.the.cow.jpg" },
   { titulo: "Freezer.Craft",           bajada: "Crea lo que quieras con imanes.",        url: "/freezer-craft/",           imagen: "freezer-craft.jpg" },
+  { titulo: "Pelusart",                bajada: "Arte con pelusa.",        url: "/pelusart/",                imagen: "pelusart.jpg" },
 ];
