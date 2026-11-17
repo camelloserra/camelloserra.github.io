@@ -100,10 +100,17 @@
     }
 
     .titulo {
-      padding: 12px 14px;
+      padding: 12px 14px 0;
       font-weight: 700;
       font-size: 1.1rem;
     }
+    .bajada-juego {
+      padding: 3px 14px 13px;
+      font-size: .92rem;
+      color: #666;
+      line-height: 1.3;
+    }
+    .titulo:last-child { padding-bottom: 12px; }
 
     footer {
       text-align: center;
@@ -166,6 +173,12 @@
       titulo.textContent = juego.titulo;
 
       a.append(mini, titulo);
+      if (juego.bajada) {
+        const bajada = document.createElement("div");
+        bajada.className = "bajada-juego";
+        bajada.textContent = juego.bajada;
+        a.append(bajada);
+      }
       contenedor.append(a);
     });
 
