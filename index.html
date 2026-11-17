@@ -147,7 +147,8 @@
   </div>
 
   <script src="ranking.js"></script>
-  <script src="juegos.js"></script>
+  <!-- la lista de juegos se pide siempre actualizada (así un juego nuevo aparece enseguida) -->
+  <script>document.write('<script src="juegos.js?t=' + Date.now() + '"><\/script>');</script>
   <script>
     const colores = ["#FFD84D", "#5FB8FF", "#FF6B6B", "#7EE081", "#C9A7FF", "#FFA94D"];
     const contenedor = document.getElementById("juegos");
