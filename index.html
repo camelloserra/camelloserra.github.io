@@ -1,236 +1,148 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Prohibido No Jugar</title>
-  <meta name="description" content="Juegos gratis para jugar en el navegador. Prohibido no jugar.">
-  <link rel="icon" href="img/icono.png">
-  <link rel="apple-touch-icon" href="img/icono.png">
-  <meta property="og:title" content="Prohibido No Jugar">
-  <meta property="og:description" content="Juegos gratis para jugar en el navegador.">
-  <meta property="og:image" content="img/logo.png">
-
-  <!-- GOOGLE ADSENSE: cuando te aprueben, pegá acá el script que te da Google -->
-
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background: #fff;
-      color: #111;
-      font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
-    }
-
-    /* Estructura: publicidad | contenido | publicidad */
-    .pagina {
-      display: grid;
-      grid-template-columns: 1fr minmax(0, 980px) 1fr;
-      gap: 24px;
-      min-height: 100vh;
-    }
-
-    .lateral {
-      display: flex;
-      justify-content: center;
-      padding-top: 180px;
-    }
-    /* Espacio reservado para anuncios verticales (160x600 o 300x600) */
-    .anuncio {
-      position: sticky;
-      top: 24px;
-      width: 160px;
-      min-height: 600px;
-    }
-
-    main { padding: 0 16px 60px; }
-
-    header { text-align: center; padding: 28px 0 12px; }
-    header img { width: min(420px, 85vw); height: auto; mix-blend-mode: multiply; }
-
-    .bajada {
-      text-align: center;
-      font-size: 1.05rem;
-      color: #555;
-      margin-bottom: 32px;
-    }
-
-    /* Grilla de juegos: se acomoda sola y los nuevos aparecen abajo */
-    .juegos {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 28px;
-    }
-
-    .juego {
-      position: relative;
-      border: 3px solid #111;
-      border-radius: 16px;
-      overflow: hidden;
-      background: #fff;
-      box-shadow: 5px 5px 0 #111;
-      transition: transform .15s ease, box-shadow .15s ease;
-    }
-    .juego:hover, .juego:focus-within {
-      transform: translate(-3px, -3px) rotate(-1deg);
-      box-shadow: 8px 8px 0 #111;
-    }
-    .juego:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #111; }
-    .juego-link { display: block; text-decoration: none; color: inherit; outline: none; }
-
-    .miniatura {
-      aspect-ratio: 16 / 10;
-      width: 100%;
-      object-fit: cover;
-      display: block;
-      border-bottom: 3px solid #111;
-    }
-    /* Tarjeta de color cuando todavía no hay imagen */
-    .miniatura.sin-imagen {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 12px;
-      font-size: 1.5rem;
-      font-weight: 800;
-      text-align: center;
-      line-height: 1.1;
-    }
-
-    /* Descripción (una línea) a la izquierda, corazón a la derecha */
-    .pie { display: flex; align-items: center; gap: 8px; padding: 10px 12px 10px 14px; }
-    .descripcion {
-      flex: 1; min-width: 0;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      font-size: .85rem; line-height: 1.3; color: #333; text-decoration: none;
-    }
-    .corazon {
-      flex: none; border: 0; background: none; padding: 2px 2px; cursor: pointer;
-      font-size: 1.25rem; line-height: 1; color: #ccc;
-      transition: transform .1s ease, color .15s ease;
-    }
-    .corazon:hover { color: #FF6B6B; }
-    .corazon.on { color: #FF4D5E; }
-    .corazon:disabled { opacity: .6; cursor: wait; }
-    .corazon.pop { animation: pop .35s ease; }
-    @keyframes pop { 40% { transform: scale(1.25); } }
-
-    footer {
-      text-align: center;
-      color: #888;
-      font-size: .9rem;
-      padding: 48px 0 0;
-    }
-
-    /* En pantallas angostas se ocultan los laterales */
-    @media (max-width: 1300px) {
-      .pagina { grid-template-columns: minmax(0, 1fr); }
-      .lateral { display: none; }
-    }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Freezer.Craft</title>
+  <meta name="description" content="Reacomodá los imanes de tu heladera, dibujá, poné tus fotos y subí tu heladera a la galería.">
+  <meta name="theme-color" content="#1c1c1e">
+  <link rel="icon" href="assets/magnets/a08.png">
+  <link rel="stylesheet" href="css/style.css?v=8">
 </head>
 <body>
-  <div class="pagina">
-    <aside class="lateral"><div class="anuncio" id="anuncio-izquierda"><!-- anuncio --></div></aside>
+  <!-- Todo el juego. En un celular en vertical se ve girado: así la persona gira el teléfono. -->
+  <div id="app">
+    <header class="topbar">
+      <h1 class="logo">Freezer<span>.</span>Craft</h1>
+      <nav class="actions">
+        <a id="pnj" class="glass pnj" href="/" title="Volver a Prohibido No Jugar">ProhibidoNoJugar</a>
+        <button id="btnFull" class="glass" title="Pantalla completa" hidden>⛶ <span>Pantalla completa</span></button>
+        <button id="btnReset" class="glass" title="Volver a acomodar todo como al principio">↺ <span>Empezar de nuevo</span></button>
+      </nav>
+    </header>
 
-    <main>
-      <header>
-        <h1><img src="img/logo.png" alt="Prohibido No Jugar"></h1>
-      </header>
-      <p class="bajada">Elegí un juego y apretá para jugar.</p>
-
-      <section class="juegos" id="juegos"></section>
-
-      <footer>© <span id="anio"></span> Prohibido No Jugar</footer>
+    <main id="stageWrap" class="stage-wrap" aria-label="Heladera">
+      <div id="stage" class="stage">
+        <img class="stage-bg" src="assets/fridge.jpg" alt="" draggable="false">
+        <div id="items" class="items"></div>
+        <p id="intro" class="intro" hidden>Creá lo que quieras.<br>Tocá cada objeto para más opciones.<span class="only-mouse"><br>Selección múltiple con Shift marcando un área.</span></p>
+        <img class="handle-overlay" src="assets/handle.png" alt="" draggable="false">
+      </div>
+      <div id="flash" class="flash"></div>
     </main>
 
-    <aside class="lateral"><div class="anuncio" id="anuncio-derecha"><!-- anuncio --></div></aside>
+    <button id="btnGallery" class="glass fab-left" title="Ver la galería"><span>Galería</span></button>
+    <button id="btnCamera" class="fab-right" title="Sacarle una foto a tu heladera">
+      <svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="currentColor" d="M9 3 7.2 5H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9Zm3 5a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg>
+    </button>
   </div>
 
-  <script src="ranking.js"></script>
-  <script src="juegos.js"></script>
-  <script>
-    const colores = ["#FFD84D", "#5FB8FF", "#FF6B6B", "#7EE081", "#C9A7FF", "#FFA94D"];
-    const contenedor = document.getElementById("juegos");
+  <div id="rotateHint" class="rotate-hint">
+    <div class="phone">📱</div>
+    <p>Girá el teléfono para jugar</p>
+  </div>
 
-    // clave de cada juego para los "me gusta": el nombre del repo (sale de la url)
-    const clave = juego => juego.url.replace(/^\/+|\/+$/g, "").split("/").pop().toLowerCase();
-    const liked = window.PNJ ? PNJ.likedSet() : new Set();
+  <div id="marquee" class="marquee" hidden></div>
 
-    JUEGOS.forEach((juego, i) => {
-      const card = document.createElement("div");
-      card.className = "juego";
+  <div id="toolbar" class="toolbar" hidden>
+    <button data-act="rotate">↻ Rotar</button>
+    <button data-act="front">⬆ Poner por arriba</button>
+    <button data-act="back">⬇ Poner por debajo</button>
+    <button data-act="photo">📷 Poner foto</button>
+    <button data-act="draw">✏️ Dibujar</button>
+    <button data-act="text">✍️ Escribir</button>
+    <button data-act="flag">🏳️ Cambiar bandera</button>
+    <button data-act="delete" class="danger">🗑 Eliminar</button>
+  </div>
 
-      const a = document.createElement("a");
-      a.className = "juego-link";
-      a.href = juego.url;
-      a.setAttribute("aria-label", juego.titulo);
+  <!-- foto de la heladera -->
+  <div id="shotModal" class="modal" hidden>
+    <div class="sheet shot-sheet">
+      <img id="shotImg" alt="Foto de tu heladera">
+      <input id="shotName" class="field" type="text" maxlength="40" placeholder="Ponele nombre a tu heladera" autocomplete="off">
+      <div class="row">
+        <button id="shotCancel" class="ghost">Cancelar</button>
+        <button id="shotDownload" class="ghost">Descargar</button>
+        <button id="shotUpload" class="primary">Subir a la galería</button>
+      </div>
+    </div>
+  </div>
 
-      let mini;
-      if (juego.imagen) {
-        mini = document.createElement("img");
-        mini.src = "img/juegos/" + juego.imagen;
-        mini.alt = juego.titulo;
-        mini.loading = "lazy";
-      } else {
-        mini = document.createElement("div");
-        mini.classList.add("sin-imagen");
-        mini.style.background = colores[i % colores.length];
-        mini.textContent = juego.titulo;
-      }
-      mini.classList.add("miniatura");
+  <!-- galería -->
+  <div id="galleryModal" class="modal gallery" hidden>
+    <div class="gallery-head">
+      <h2>Galería <small id="galleryKind"></small></h2>
+      <nav id="galleryTabs" class="gallery-tabs" hidden>
+        <button data-view="recent" class="on">Recientes</button>
+        <button data-view="top">🏆 Top 10</button>
+      </nav>
+      <button id="galleryClose" class="close" title="Cerrar">✕</button>
+    </div>
+    <div id="galleryGrid" class="gallery-grid"></div>
+    <p id="galleryEmpty" class="gallery-empty" hidden>Todavía no hay fotos. Tocá la cámara 📷 para subir la primera.</p>
+  </div>
+  <div id="viewer" class="modal viewer" hidden>
+    <img id="viewerImg" alt="">
+    <p id="viewerName" class="viewer-name"></p>
+    <button id="viewerVote" class="heart big" hidden><span class="h">♥</span> <span class="n">0</span></button>
+    <div class="row">
+      <button id="viewerClose" class="ghost">Cerrar</button>
+      <button id="viewerDownload" class="ghost">Descargar</button>
+      <button id="viewerDelete" class="ghost danger">Borrar</button>
+    </div>
+  </div>
 
-      card.append(a);
-      a.append(mini);
+  <!-- dibujar en la hoja -->
+  <div id="drawModal" class="modal draw" hidden>
+    <div class="draw-board">
+      <img id="drawPaper" src="assets/magnets/hoja.png" alt="">
+      <canvas id="drawCanvas"></canvas>
+    </div>
+    <div class="draw-tools">
+      <div id="drawColors" class="colors"></div>
+      <div class="sizes">
+        <button data-size="4" title="Fino">●</button>
+        <button data-size="10" title="Medio" class="on">⬤</button>
+        <button data-size="22" title="Grueso"><b>⬤</b></button>
+      </div>
+      <button id="drawEraser" class="ghost">🧽 Goma</button>
+      <button id="drawUndo" class="ghost">↶ Deshacer</button>
+      <button id="drawClear" class="ghost">Borrar todo</button>
+      <button id="drawCancel" class="ghost">Cancelar</button>
+      <button id="drawDone" class="primary">Listo</button>
+    </div>
+  </div>
 
-      // pie: descripción (también lleva al juego) + corazón
-      const pie = document.createElement("div");
-      pie.className = "pie";
-      const desc = document.createElement("a");
-      desc.className = "descripcion";
-      desc.href = juego.url;
-      desc.textContent = juego.bajada || juego.titulo;
-      desc.title = juego.bajada || "";
-      pie.append(desc);
+  <!-- escribir en el cassette -->
+  <div id="textModal" class="modal" hidden>
+    <div class="sheet text-sheet">
+      <label for="textInput">¿Qué banda o canción?</label>
+      <input id="textInput" class="field" type="text" maxlength="28" autocomplete="off">
+      <div class="row">
+        <button id="textCancel" class="ghost">Cancelar</button>
+        <button id="textOk" class="primary">Listo</button>
+      </div>
+    </div>
+  </div>
 
-      if (window.PNJ) {
-        const id = clave(juego);
-        const b = document.createElement("button");
-        b.type = "button";
-        b.className = "corazon" + (liked.has(id) ? " on" : "");
-        b.title = "Me gusta";
-        b.setAttribute("aria-label", "Me gusta " + juego.titulo);
-        b.setAttribute("aria-pressed", liked.has(id));
-        b.textContent = "♥";
-        b.addEventListener("click", async () => {
-          const delta = liked.has(id) ? -1 : 1;
-          b.disabled = true;
-          try {
-            await PNJ.like(id, delta);
-            if (delta > 0) liked.add(id); else liked.delete(id);
-            PNJ.saveLiked(liked);
-            b.classList.toggle("on", delta > 0);
-            b.setAttribute("aria-pressed", delta > 0);
-            b.classList.remove("pop"); void b.offsetWidth; if (delta > 0) b.classList.add("pop");
-          } catch (e) { /* sin conexión: no pasa nada */ }
-          b.disabled = false;
-        });
-        card.dataset.id = id;
-        card.dataset.orden = i;
-        pie.append(b);
-      }
-      card.append(pie);
-      contenedor.append(card);
-    });
+  <!-- elegir bandera -->
+  <div id="flagModal" class="modal" hidden>
+    <div class="sheet flag-sheet">
+      <div class="flag-head">
+        <input id="flagSearch" class="field" type="search" placeholder="Buscar país…" autocomplete="off">
+        <button id="flagClose" class="close dark" title="Cerrar">✕</button>
+      </div>
+      <div id="flagGrid" class="flag-grid"></div>
+    </div>
+  </div>
 
-    // los más votados primero (el número no se muestra; a igual cantidad, el orden de juegos.js)
-    if (window.PNJ) PNJ.likes().then(cuentas => {
-      const cards = [...contenedor.children];
-      cards.sort((x, y) => (cuentas[y.dataset.id] || 0) - (cuentas[x.dataset.id] || 0) || x.dataset.orden - y.dataset.orden);
-      cards.forEach(c => contenedor.append(c));
-    }).catch(() => {});
+  <div id="toast" class="toast" role="status" aria-live="polite"><span id="toastText"></span><button id="toastUndo" hidden>Deshacer</button></div>
+  <input id="filePick" type="file" accept="image/*" hidden>
+  <audio id="music" src="assets/music.mp3" loop preload="auto"></audio>
 
-    document.getElementById("anio").textContent = new Date().getFullYear();
-  </script>
+  <script src="js/config.js?v=8"></script>
+  <script src="js/magnets.js?v=8"></script>
+  <script src="js/gallery.js?v=8"></script>
+  <script src="js/game.js?v=8"></script>
 </body>
 </html>
