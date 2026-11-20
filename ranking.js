@@ -134,4 +134,38 @@
   };
 
   window.PNJ = PNJ;
+
+  /* --- contador de visitas anónimo (para el panel /panel/) ---
+     Guarda: un número al azar por navegador, qué página, de dónde vino,
+     la zona horaria (país aproximado) y si es celular, tablet o compu.
+     No guarda la IP ni datos personales. */
+  try {
+    const path = location.pathname.split('/').filter(Boolean);
+    const page = (path[0] || 'home').toLowerCase();
+    if (page !== 'panel' && !/^(localhost|127\.)/.test(location.hostname)) {
+      let vid = '';
+      try { vid = localStorage.getItem('pnj_vid') || ''; } catch (e) {}
+      if (!/^[a-z0-9]{8,32}$/.test(vid)) {
+        vid = (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/g, '').slice(0, 16).padEnd(8, '0');
+        try { localStorage.setItem('pnj_vid', vid); } catch (e) {}
+      }
+      let ref = '';
+      try {
+        if (document.referrer) {
+          const r = new URL(document.referrer);
+          ref = r.hostname === location.hostname ? (r.pathname.split('/').filter(Boolean)[0] || 'home') : r.hostname.replace(/^www\./, '');
+        }
+      } catch (e) {}
+      const ua = navigator.userAgent || '';
+      const device = /iPad|Tablet/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) ? 'tablet'
+                   : /Mobi|Android|iPhone/i.test(ua) ? 'celular' : 'compu';
+      let tz = '';
+      try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+      fetch(`${SUPABASE_URL}/rest/v1/rpc/pnj_track`, {
+        method: 'POST', keepalive: true,
+        headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_visitor: vid, p_page: page, p_ref: ref, p_tz: tz, p_device: device, p_lang: navigator.language || '' })
+      }).catch(() => {});
+    }
+  } catch (e) { /* el contador nunca rompe la página */ }
 })();

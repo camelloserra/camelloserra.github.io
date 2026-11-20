@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Panel · Prohibido No Jugar</title>
+  <link rel="icon" href="/img/icono.png">
+  <style>
+    .viz-root {
+      color-scheme: light;
+      --surface-0: #ffffff;
+      --surface-1: #fcfcfb;
+      --line: #e6e5e1;
+      --text-primary: #0b0b0b;
+      --text-secondary: #52514e;
+      --text-muted: #8a8984;
+      --series-1: #2a78d6;
+      --series-1-wash: rgba(42,120,214,.10);
+      --accent: #FF4D5E;
+      --ink: #111;
+    }
+    @media (prefers-color-scheme: dark) {
+      .viz-root {
+        color-scheme: dark;
+        --surface-0: #111110;
+        --surface-1: #1a1a19;
+        --line: #2e2e2c;
+        --text-primary: #f0efec;
+        --text-secondary: #c3c2b7;
+        --text-muted: #8f8e88;
+        --series-1: #3987e5;
+        --series-1-wash: rgba(57,135,229,.16);
+        --ink: #f0efec;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--surface-0); color: var(--text-primary); font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif; }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 22px 18px 60px; }
+
+    header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
+    header img { height: 44px; width: auto; }
+    @media (prefers-color-scheme: dark) { header img { filter: invert(1); } }
+    header h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: .01em; }
+    header .sub { color: var(--text-muted); font-size: .85rem; }
+    .grow { flex: 1; }
+    .ctrl { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .seg { display: inline-flex; border: 2px solid var(--ink); border-radius: 999px; overflow: hidden; }
+    .seg button { border: 0; background: transparent; color: var(--text-primary); font: 700 .85rem inherit; font-family: inherit; padding: 6px 12px; cursor: pointer; }
+    .seg button.on { background: var(--ink); color: var(--surface-0); }
+    .btn { border: 2px solid var(--ink); background: transparent; color: var(--text-primary); border-radius: 999px; padding: 6px 12px; font: 700 .85rem inherit; font-family: inherit; cursor: pointer; }
+
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(12, 1fr); }
+    .card { grid-column: span 12; background: var(--surface-1); border: 2px solid var(--ink); border-radius: 16px; padding: 16px 18px; box-shadow: 4px 4px 0 var(--ink); min-width: 0; }
+    .card h2 { font-size: .95rem; font-weight: 800; margin-bottom: 2px; }
+    .card .hint { color: var(--text-muted); font-size: .8rem; margin-bottom: 12px; }
+    @media (min-width: 760px) {
+      .s3 { grid-column: span 3; } .s4 { grid-column: span 4; } .s6 { grid-column: span 6; } .s8 { grid-column: span 8; }
+    }
+    @media (min-width: 520px) and (max-width: 759px) { .s3 { grid-column: span 6; } }
+
+    /* números grandes */
+    .tile .label { color: var(--text-secondary); font-size: .85rem; font-weight: 700; }
+    .tile .num { font-size: 2.3rem; font-weight: 800; line-height: 1.1; margin-top: 4px; font-variant-numeric: tabular-nums; }
+    .tile .meta { color: var(--text-muted); font-size: .8rem; margin-top: 2px; }
+    .live-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #1baf7a; margin-right: 6px; vertical-align: 1px; box-shadow: 0 0 0 0 rgba(27,175,122,.6); animation: pulse 1.8s infinite; }
+    @keyframes pulse { 70% { box-shadow: 0 0 0 8px rgba(27,175,122,0); } 100% { box-shadow: 0 0 0 0 rgba(27,175,122,0); } }
+
+    /* columnas por día / hora */
+    .chart { position: relative; }
+    .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .chart .grid-line { stroke: var(--line); stroke-width: 1; }
+    .chart .axis-text { fill: var(--text-muted); font-size: 11px; font-family: inherit; }
+    .chart .bar { fill: var(--series-1); }
+    .chart .hit { fill: transparent; cursor: default; }
+    .chart .hit:hover + .bar, .chart .bar.hover { opacity: .75; }
+    .tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--surface-0); font-size: .8rem; padding: 6px 9px; border-radius: 8px; white-space: nowrap; transform: translate(-50%, -110%); opacity: 0; transition: opacity .1s; z-index: 5; }
+    .tip b { font-weight: 800; }
+
+    /* barras horizontales */
+    .hbars { display: grid; gap: 8px; }
+    .hrow { display: grid; grid-template-columns: minmax(90px, 38%) 1fr auto; gap: 10px; align-items: center; font-size: .88rem; }
+    .hrow .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); }
+    .hrow .track { height: 12px; position: relative; }
+    .hrow .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--series-1); border-radius: 0 4px 4px 0; min-width: 2px; }
+    .hrow .val { color: var(--text-secondary); font-variant-numeric: tabular-nums; font-weight: 700; min-width: 2.5em; text-align: right; }
+    .empty { color: var(--text-muted); font-size: .88rem; padding: 6px 0; }
+
+    /* tablas */
+    table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+    th { text-align: left; color: var(--text-muted); font-weight: 700; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    td { padding: 7px 8px; border-bottom: 1px solid var(--line); color: var(--text-primary); }
+    td.muted { color: var(--text-secondary); }
+    td.nw { white-space: nowrap; }
+    .tablewrap { overflow-x: auto; }
+    .mini { display: flex; gap: 22px; flex-wrap: wrap; }
+    .mini div b { display: block; font-size: 1.6rem; font-weight: 800; }
+    .mini div span { color: var(--text-secondary); font-size: .8rem; }
+
+    /* login */
+    #login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    #login form { width: min(360px, 100%); background: var(--surface-1); border: 2px solid var(--ink); border-radius: 18px; box-shadow: 5px 5px 0 var(--ink); padding: 26px 24px; text-align: center; }
+    #login img { width: 210px; max-width: 80%; margin-bottom: 12px; }
+    @media (prefers-color-scheme: dark) { #login img { filter: invert(1); } }
+    #login input[type=password] { width: 100%; font: inherit; font-size: 1rem; padding: 11px 14px; border: 2px solid var(--ink); border-radius: 12px; background: var(--surface-0); color: var(--text-primary); margin: 14px 0 10px; }
+    #login label { display: flex; gap: 8px; align-items: center; justify-content: center; font-size: .85rem; color: var(--text-secondary); margin-bottom: 14px; }
+    #login button { width: 100%; font: 800 1rem inherit; font-family: inherit; padding: 11px; border-radius: 12px; border: 2px solid var(--ink); background: var(--ink); color: var(--surface-0); cursor: pointer; }
+    #login .err { color: var(--accent); font-size: .85rem; min-height: 1.2em; margin-top: 10px; }
+    [hidden] { display: none !important; }
+    .foot { color: var(--text-muted); font-size: .78rem; margin-top: 18px; text-align: center; }
+  </style>
+</head>
+<body class="viz-root">
+
+<div id="login">
+  <form id="loginForm" autocomplete="on">
+    <img src="/img/logo.png" alt="Prohibido No Jugar">
+    <div style="font-weight:800">Panel de métricas</div>
+    <input type="password" id="pass" placeholder="Contraseña" autocomplete="current-password" required>
+    <label><input type="checkbox" id="remember"> Recordarme en este dispositivo</label>
+    <button type="submit">Entrar</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+</div>
+
+<div class="wrap" id="app" hidden>
+  <header>
+    <img src="/img/logo.png" alt="Prohibido No Jugar">
+    <div>
+      <h1>Panel de métricas</h1>
+      <div class="sub" id="updated">Cargando…</div>
+    </div>
+    <div class="grow"></div>
+    <div class="ctrl">
+      <div class="seg" id="period">
+        <button data-d="1">Hoy</button><button data-d="7">7 días</button><button data-d="30" class="on">30 días</button><button data-d="90">90 días</button>
+      </div>
+      <button class="btn" id="refresh" title="Actualizar">↻</button>
+      <button class="btn" id="logout">Salir</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="card tile s3"><div class="label"><span class="live-dot"></span>En vivo ahora</div><div class="num" id="tLive">–</div><div class="meta">personas en los últimos 5 min</div></div>
+    <div class="card tile s3"><div class="label">Hoy</div><div class="num" id="tToday">–</div><div class="meta" id="tTodayMeta">visitantes únicos</div></div>
+    <div class="card tile s3"><div class="label" id="tPeriodLabel">Últimos 30 días</div><div class="num" id="tPeriod">–</div><div class="meta" id="tPeriodMeta">visitantes únicos</div></div>
+    <div class="card tile s3"><div class="label">Desde el principio</div><div class="num" id="tTotal">–</div><div class="meta">visitantes únicos en total</div></div>
+
+    <div class="card s8">
+      <h2>Visitantes por día</h2><div class="hint">Personas distintas cada día (pasá el mouse por una barra para ver el detalle)</div>
+      <div class="chart" id="cDays"></div>
+    </div>
+    <div class="card s4">
+      <h2>Dispositivos</h2><div class="hint">Visitantes únicos</div>
+      <div class="hbars" id="cDevices"></div>
+      <h2 style="margin-top:18px">Me gusta ♥</h2><div class="hint">Total acumulado por juego</div>
+      <div class="hbars" id="cLikes"></div>
+    </div>
+
+    <div class="card s6">
+      <h2>Juegos más visitados</h2><div class="hint">Visitantes únicos en el período</div>
+      <div class="hbars" id="cPages"></div>
+    </div>
+    <div class="card s6">
+      <h2>Países</h2><div class="hint">Aproximado, según la zona horaria del dispositivo</div>
+      <div class="hbars" id="cCountries"></div>
+    </div>
+
+    <div class="card s6">
+      <h2>De dónde llegan</h2><div class="hint">Página anterior a la visita · visitas</div>
+      <div class="hbars" id="cRefs"></div>
+    </div>
+    <div class="card s6">
+      <h2>Hora del día</h2><div class="hint">Visitas según la hora de Argentina</div>
+      <div class="chart" id="cHours"></div>
+    </div>
+
+    <div class="card s6">
+      <h2>Récords guardados</h2><div class="hint">En el período · cantidad (jugadores distintos)</div>
+      <div class="hbars" id="cRecords"></div>
+      <div class="tablewrap" style="margin-top:14px"><table id="tRecords"></table></div>
+    </div>
+    <div class="card s6">
+      <h2>Galerías</h2><div class="hint">Obras subidas por la gente</div>
+      <div class="mini" id="cGalleries"></div>
+      <h2 style="margin-top:18px">Últimas visitas</h2><div class="hint">En vivo, las más recientes primero</div>
+      <div class="tablewrap"><table id="tVisits"></table></div>
+    </div>
+  </div>
+  <div class="foot">Se actualiza solo cada minuto · Las visitas son anónimas: no se guarda la IP ni datos personales.</div>
+</div>
+
+<script src="/juegos.js"></script>
+<script>
+(() => {
+  'use strict';
+  const SUPABASE_URL = 'https://fzmuhwrwupofvrmtsawt.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_wTc2hxiXymgBmynOf7vKYQ_7ygccIke';
+  const TZ2CC = {"Europe/Andorra":"AD","Asia/Dubai":"AE","Asia/Kabul":"AF","America/Antigua":"AG","America/Anguilla":"AI","Europe/Tirane":"AL","Asia/Yerevan":"AM","Africa/Luanda":"AO","Antarctica/McMurdo":"AQ","Antarctica/Casey":"AQ","Antarctica/Davis":"AQ","Antarctica/DumontDUrville":"AQ","Antarctica/Mawson":"AQ","Antarctica/Palmer":"AQ","Antarctica/Rothera":"AQ","Antarctica/Syowa":"AQ","Antarctica/Troll":"AQ","Antarctica/Vostok":"AQ","America/Argentina/Buenos_Aires":"AR","America/Argentina/Cordoba":"AR","America/Argentina/Salta":"AR","America/Argentina/Jujuy":"AR","America/Argentina/Tucuman":"AR","America/Argentina/Catamarca":"AR","America/Argentina/La_Rioja":"AR","America/Argentina/San_Juan":"AR","America/Argentina/Mendoza":"AR","America/Argentina/San_Luis":"AR","America/Argentina/Rio_Gallegos":"AR","America/Argentina/Ushuaia":"AR","Pacific/Pago_Pago":"AS","Europe/Vienna":"AT","Australia/Lord_Howe":"AU","Antarctica/Macquarie":"AU","Australia/Hobart":"AU","Australia/Melbourne":"AU","Australia/Sydney":"AU","Australia/Broken_Hill":"AU","Australia/Brisbane":"AU","Australia/Lindeman":"AU","Australia/Adelaide":"AU","Australia/Darwin":"AU","Australia/Perth":"AU","Australia/Eucla":"AU","America/Aruba":"AW","Europe/Mariehamn":"AX","Asia/Baku":"AZ","Europe/Sarajevo":"BA","America/Barbados":"BB","Asia/Dhaka":"BD","Europe/Brussels":"BE","Africa/Ouagadougou":"BF","Europe/Sofia":"BG","Asia/Bahrain":"BH","Africa/Bujumbura":"BI","Africa/Porto-Novo":"BJ","America/St_Barthelemy":"BL","Atlantic/Bermuda":"BM","Asia/Brunei":"BN","America/La_Paz":"BO","America/Kralendijk":"BQ","America/Noronha":"BR","America/Belem":"BR","America/Fortaleza":"BR","America/Recife":"BR","America/Araguaina":"BR","America/Maceio":"BR","America/Bahia":"BR","America/Sao_Paulo":"BR","America/Campo_Grande":"BR","America/Cuiaba":"BR","America/Santarem":"BR","America/Porto_Velho":"BR","America/Boa_Vista":"BR","America/Manaus":"BR","America/Eirunepe":"BR","America/Rio_Branco":"BR","America/Nassau":"BS","Asia/Thimphu":"BT","Africa/Gaborone":"BW","Europe/Minsk":"BY","America/Belize":"BZ","America/St_Johns":"CA","America/Halifax":"CA","America/Glace_Bay":"CA","America/Moncton":"CA","America/Goose_Bay":"CA","America/Blanc-Sablon":"CA","America/Toronto":"CA","America/Iqaluit":"CA","America/Atikokan":"CA","America/Winnipeg":"CA","America/Resolute":"CA","America/Rankin_Inlet":"CA","America/Regina":"CA","America/Swift_Current":"CA","America/Edmonton":"CA","America/Cambridge_Bay":"CA","America/Inuvik":"CA","America/Vancouver":"CA","America/Creston":"CA","America/Dawson_Creek":"CA","America/Fort_Nelson":"CA","America/Whitehorse":"CA","America/Dawson":"CA","Indian/Cocos":"CC","Africa/Kinshasa":"CD","Africa/Lubumbashi":"CD","Africa/Bangui":"CF","Africa/Brazzaville":"CG","Europe/Zurich":"CH","Africa/Abidjan":"CI","Pacific/Rarotonga":"CK","America/Santiago":"CL","America/Coyhaique":"CL","America/Punta_Arenas":"CL","Pacific/Easter":"CL","Africa/Douala":"CM","Asia/Shanghai":"CN","Asia/Urumqi":"CN","America/Bogota":"CO","America/Costa_Rica":"CR","America/Havana":"CU","Atlantic/Cape_Verde":"CV","America/Curacao":"CW","Indian/Christmas":"CX","Asia/Nicosia":"CY","Asia/Famagusta":"CY","Europe/Prague":"CZ","Europe/Berlin":"DE","Europe/Busingen":"DE","Africa/Djibouti":"DJ","Europe/Copenhagen":"DK","America/Dominica":"DM","America/Santo_Domingo":"DO","Africa/Algiers":"DZ","America/Guayaquil":"EC","Pacific/Galapagos":"EC","Europe/Tallinn":"EE","Africa/Cairo":"EG","Africa/El_Aaiun":"EH","Africa/Asmara":"ER","Europe/Madrid":"ES","Africa/Ceuta":"ES","Atlantic/Canary":"ES","Africa/Addis_Ababa":"ET","Europe/Helsinki":"FI","Pacific/Fiji":"FJ","Atlantic/Stanley":"FK","Pacific/Chuuk":"FM","Pacific/Pohnpei":"FM","Pacific/Kosrae":"FM","Atlantic/Faroe":"FO","Europe/Paris":"FR","Africa/Libreville":"GA","Europe/London":"GB","America/Grenada":"GD","Asia/Tbilisi":"GE","America/Cayenne":"GF","Europe/Guernsey":"GG","Africa/Accra":"GH","Europe/Gibraltar":"GI","America/Nuuk":"GL","America/Danmarkshavn":"GL","America/Scoresbysund":"GL","America/Thule":"GL","Africa/Banjul":"GM","Africa/Conakry":"GN","America/Guadeloupe":"GP","Africa/Malabo":"GQ","Europe/Athens":"GR","Atlantic/South_Georgia":"GS","America/Guatemala":"GT","Pacific/Guam":"GU","Africa/Bissau":"GW","America/Guyana":"GY","Asia/Hong_Kong":"HK","America/Tegucigalpa":"HN","Europe/Zagreb":"HR","America/Port-au-Prince":"HT","Europe/Budapest":"HU","Asia/Jakarta":"ID","Asia/Pontianak":"ID","Asia/Makassar":"ID","Asia/Jayapura":"ID","Europe/Dublin":"IE","Asia/Jerusalem":"IL","Europe/Isle_of_Man":"IM","Asia/Kolkata":"IN","Indian/Chagos":"IO","Asia/Baghdad":"IQ","Asia/Tehran":"IR","Atlantic/Reykjavik":"IS","Europe/Rome":"IT","Europe/Jersey":"JE","America/Jamaica":"JM","Asia/Amman":"JO","Asia/Tokyo":"JP","Africa/Nairobi":"KE","Asia/Bishkek":"KG","Asia/Phnom_Penh":"KH","Pacific/Tarawa":"KI","Pacific/Kanton":"KI","Pacific/Kiritimati":"KI","Indian/Comoro":"KM","America/St_Kitts":"KN","Asia/Pyongyang":"KP","Asia/Seoul":"KR","Asia/Kuwait":"KW","America/Cayman":"KY","Asia/Almaty":"KZ","Asia/Qyzylorda":"KZ","Asia/Qostanay":"KZ","Asia/Aqtobe":"KZ","Asia/Aqtau":"KZ","Asia/Atyrau":"KZ","Asia/Oral":"KZ","Asia/Vientiane":"LA","Asia/Beirut":"LB","America/St_Lucia":"LC","Europe/Vaduz":"LI","Asia/Colombo":"LK","Africa/Monrovia":"LR","Africa/Maseru":"LS","Europe/Vilnius":"LT","Europe/Luxembourg":"LU","Europe/Riga":"LV","Africa/Tripoli":"LY","Africa/Casablanca":"MA","Europe/Monaco":"MC","Europe/Chisinau":"MD","Europe/Podgorica":"ME","America/Marigot":"MF","Indian/Antananarivo":"MG","Pacific/Majuro":"MH","Pacific/Kwajalein":"MH","Europe/Skopje":"MK","Africa/Bamako":"ML","Asia/Yangon":"MM","Asia/Ulaanbaatar":"MN","Asia/Hovd":"MN","Asia/Macau":"MO","Pacific/Saipan":"MP","America/Martinique":"MQ","Africa/Nouakchott":"MR","America/Montserrat":"MS","Europe/Malta":"MT","Indian/Mauritius":"MU","Indian/Maldives":"MV","Africa/Blantyre":"MW","America/Mexico_City":"MX","America/Cancun":"MX","America/Merida":"MX","America/Monterrey":"MX","America/Matamoros":"MX","America/Chihuahua":"MX","America/Ciudad_Juarez":"MX","America/Ojinaga":"MX","America/Mazatlan":"MX","America/Bahia_Banderas":"MX","America/Hermosillo":"MX","America/Tijuana":"MX","Asia/Kuala_Lumpur":"MY","Asia/Kuching":"MY","Africa/Maputo":"MZ","Africa/Windhoek":"NA","Pacific/Noumea":"NC","Africa/Niamey":"NE","Pacific/Norfolk":"NF","Africa/Lagos":"NG","America/Managua":"NI","Europe/Amsterdam":"NL","Europe/Oslo":"NO","Asia/Kathmandu":"NP","Pacific/Nauru":"NR","Pacific/Niue":"NU","Pacific/Auckland":"NZ","Pacific/Chatham":"NZ","Asia/Muscat":"OM","America/Panama":"PA","America/Lima":"PE","Pacific/Tahiti":"PF","Pacific/Marquesas":"PF","Pacific/Gambier":"PF","Pacific/Port_Moresby":"PG","Pacific/Bougainville":"PG","Asia/Manila":"PH","Asia/Karachi":"PK","Europe/Warsaw":"PL","America/Miquelon":"PM","Pacific/Pitcairn":"PN","America/Puerto_Rico":"PR","Asia/Gaza":"PS","Asia/Hebron":"PS","Europe/Lisbon":"PT","Atlantic/Madeira":"PT","Atlantic/Azores":"PT","Pacific/Palau":"PW","America/Asuncion":"PY","Asia/Qatar":"QA","Indian/Reunion":"RE","Europe/Bucharest":"RO","Europe/Belgrade":"RS","Europe/Kaliningrad":"RU","Europe/Moscow":"RU","Europe/Simferopol":"UA","Europe/Kirov":"RU","Europe/Volgograd":"RU","Europe/Astrakhan":"RU","Europe/Saratov":"RU","Europe/Ulyanovsk":"RU","Europe/Samara":"RU","Asia/Yekaterinburg":"RU","Asia/Omsk":"RU","Asia/Novosibirsk":"RU","Asia/Barnaul":"RU","Asia/Tomsk":"RU","Asia/Novokuznetsk":"RU","Asia/Krasnoyarsk":"RU","Asia/Irkutsk":"RU","Asia/Chita":"RU","Asia/Yakutsk":"RU","Asia/Khandyga":"RU","Asia/Vladivostok":"RU","Asia/Ust-Nera":"RU","Asia/Magadan":"RU","Asia/Sakhalin":"RU","Asia/Srednekolymsk":"RU","Asia/Kamchatka":"RU","Asia/Anadyr":"RU","Africa/Kigali":"RW","Asia/Riyadh":"SA","Pacific/Guadalcanal":"SB","Indian/Mahe":"SC","Africa/Khartoum":"SD","Europe/Stockholm":"SE","Asia/Singapore":"SG","Atlantic/St_Helena":"SH","Europe/Ljubljana":"SI","Arctic/Longyearbyen":"SJ","Europe/Bratislava":"SK","Africa/Freetown":"SL","Europe/San_Marino":"SM","Africa/Dakar":"SN","Africa/Mogadishu":"SO","America/Paramaribo":"SR","Africa/Juba":"SS","Africa/Sao_Tome":"ST","America/El_Salvador":"SV","America/Lower_Princes":"SX","Asia/Damascus":"SY","Africa/Mbabane":"SZ","America/Grand_Turk":"TC","Africa/Ndjamena":"TD","Indian/Kerguelen":"TF","Africa/Lome":"TG","Asia/Bangkok":"TH","Asia/Dushanbe":"TJ","Pacific/Fakaofo":"TK","Asia/Dili":"TL","Asia/Ashgabat":"TM","Africa/Tunis":"TN","Pacific/Tongatapu":"TO","Europe/Istanbul":"TR","America/Port_of_Spain":"TT","Pacific/Funafuti":"TV","Asia/Taipei":"TW","Africa/Dar_es_Salaam":"TZ","Europe/Kyiv":"UA","Africa/Kampala":"UG","Pacific/Midway":"UM","Pacific/Wake":"UM","America/New_York":"US","America/Detroit":"US","America/Kentucky/Louisville":"US","America/Kentucky/Monticello":"US","America/Indiana/Indianapolis":"US","America/Indiana/Vincennes":"US","America/Indiana/Winamac":"US","America/Indiana/Marengo":"US","America/Indiana/Petersburg":"US","America/Indiana/Vevay":"US","America/Chicago":"US","America/Indiana/Tell_City":"US","America/Indiana/Knox":"US","America/Menominee":"US","America/North_Dakota/Center":"US","America/North_Dakota/New_Salem":"US","America/North_Dakota/Beulah":"US","America/Denver":"US","America/Boise":"US","America/Phoenix":"US","America/Los_Angeles":"US","America/Anchorage":"US","America/Juneau":"US","America/Sitka":"US","America/Metlakatla":"US","America/Yakutat":"US","America/Nome":"US","America/Adak":"US","Pacific/Honolulu":"US","America/Montevideo":"UY","Asia/Samarkand":"UZ","Asia/Tashkent":"UZ","Europe/Vatican":"VA","America/St_Vincent":"VC","America/Caracas":"VE","America/Tortola":"VG","America/St_Thomas":"VI","Asia/Ho_Chi_Minh":"VN","Pacific/Efate":"VU","Pacific/Wallis":"WF","Pacific/Apia":"WS","Asia/Aden":"YE","Indian/Mayotte":"YT","Africa/Johannesburg":"ZA","Africa/Lusaka":"ZM","Africa/Harare":"ZW","Australia/ACT":"AU","Australia/LHI":"AU","Australia/NSW":"AU","Australia/North":"AU","Australia/Queensland":"AU","Australia/South":"AU","Australia/Tasmania":"AU","Australia/Victoria":"AU","Australia/West":"AU","Australia/Yancowinna":"AU","Brazil/Acre":"BR","Brazil/DeNoronha":"BR","Brazil/East":"BR","Brazil/West":"BR","Canada/Atlantic":"CA","Canada/Central":"CA","Canada/Eastern":"CA","Canada/Mountain":"CA","Canada/Newfoundland":"CA","Canada/Pacific":"CA","Canada/Saskatchewan":"CA","Canada/Yukon":"CA","Chile/Continental":"CL","Chile/EasterIsland":"CL","Cuba":"CU","Egypt":"EG","Eire":"IE","GB":"GB","GB-Eire":"GB","Hongkong":"HK","Iran":"IR","Israel":"IL","Jamaica":"JM","Japan":"JP","Kwajalein":"MH","Libya":"LY","Mexico/BajaNorte":"MX","Mexico/BajaSur":"MX","Mexico/General":"MX","NZ":"NZ","NZ-CHAT":"NZ","Navajo":"US","PRC":"CN","Poland":"PL","Portugal":"PT","ROC":"TW","ROK":"KR","Singapore":"SG","Turkey":"TR","US/Alaska":"US","US/Aleutian":"US","US/Arizona":"US","US/Central":"US","US/East-Indiana":"US","US/Eastern":"US","US/Hawaii":"US","US/Indiana-Starke":"US","US/Michigan":"US","US/Mountain":"US","US/Pacific":"US","US/Samoa":"AS","W-SU":"RU","America/Buenos_Aires":"AR","America/Catamarca":"AR","America/Cordoba":"AR","America/Indianapolis":"US","America/Jujuy":"AR","America/Knox_IN":"US","America/Louisville":"US","America/Mendoza":"AR","Pacific/Samoa":"AS","America/Argentina/ComodRivadavia":"AR","America/Atka":"US","America/Ensenada":"MX","America/Fort_Wayne":"US","America/Montreal":"CA","America/Nipigon":"CA","America/Pangnirtung":"CA","America/Porto_Acre":"BR","America/Rainy_River":"CA","America/Rosario":"AR","America/Santa_Isabel":"MX","America/Shiprock":"US","America/Thunder_Bay":"CA","America/Yellowknife":"CA","Asia/Choibalsan":"MN","Asia/Chongqing":"CN","Asia/Harbin":"CN","Asia/Kashgar":"CN","Asia/Tel_Aviv":"IL","Australia/Canberra":"AU","Australia/Currie":"AU","Europe/Belfast":"GB","Europe/Tiraspol":"MD","Europe/Uzhgorod":"UA","Europe/Zaporozhye":"UA","Pacific/Enderbury":"KI","Pacific/Johnston":"US","America/Godthab":"GL","Asia/Ashkhabad":"TM","Asia/Calcutta":"IN","Asia/Chungking":"CN","Asia/Dacca":"BD","Asia/Istanbul":"TR","Asia/Katmandu":"NP","Asia/Macao":"MO","Asia/Rangoon":"MM","Asia/Saigon":"VN","Asia/Thimbu":"BT","Asia/Ujung_Pandang":"ID","Asia/Ulan_Bator":"MN","Atlantic/Faeroe":"FO","Europe/Kiev":"UA","Europe/Nicosia":"CY","Africa/Asmera":"ER","Africa/Timbuktu":"ML","America/Coral_Harbour":"CA","America/Virgin":"VI","Antarctica/South_Pole":"AQ","Iceland":"IS","Atlantic/Jan_Mayen":"NO","Pacific/Truk":"FM","Pacific/Yap":"FM","Pacific/Ponape":"FM"};
+  const $ = id => document.getElementById(id);
+  const fmt = n => Number(n || 0).toLocaleString('es-AR');
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  // nombres lindos para cada página / origen
+  const NAMES = { home: 'Home' };
+  (typeof JUEGOS !== 'undefined' ? JUEGOS : []).forEach(j => { NAMES[j.url.replace(/^\/+|\/+$/g, '').split('/').pop().toLowerCase()] = j.titulo; });
+  Object.assign(NAMES, { 'help-the-cow': NAMES['help.the.cow'] || 'Help the Cow', 'escape-from-the-libyans': NAMES['escape.from.the.libyans'] || 'Escape from the Libyans' });
+  const pageName = p => NAMES[p] || p;
+  const REF = [[/(^|\.)instagram\.com$/, 'Instagram'], [/(^|\.)facebook\.com$|^fb\.|^m\.facebook/, 'Facebook'], [/whatsapp|^wa\.me$/, 'WhatsApp'],
+               [/(^|\.)google\./, 'Google'], [/^t\.co$|(^|\.)twitter\.com$|(^|\.)x\.com$/, 'X / Twitter'], [/linkedin/, 'LinkedIn'], [/nicoycamello\.com$/, 'Portfolio Nico&Camello'],
+               [/(^|\.)tiktok\.com$/, 'TikTok'], [/(^|\.)bing\.com$/, 'Bing'], [/(^|\.)youtube\.com$/, 'YouTube'], [/github/, 'GitHub']];
+  const refName = r => {
+    if (!r) return 'Directo (link, favorito o app)';
+    if (NAMES[r] || r === 'home') return 'Desde ' + pageName(r);
+    for (const [re, n] of REF) if (re.test(r)) return n;
+    return r;
+  };
+  const regionNames = (() => { try { return new Intl.DisplayNames(['es'], { type: 'region' }); } catch (e) { return null; } })();
+  const flag = cc => cc ? String.fromCodePoint(...[...cc].map(c => 127397 + c.charCodeAt(0))) : '🌐';
+  const country = tz => { const cc = TZ2CC[tz] || ''; return { cc, name: cc ? ((regionNames && regionNames.of(cc)) || cc) : 'Sin dato' }; };
+  const devName = d => ({ celular: '📱 Celular', tablet: '📟 Tablet', compu: '💻 Compu' }[d] || 'Sin dato');
+
+  // ---------- sesión ----------
+  let pass = '';
+  try { pass = sessionStorage.getItem('pnj_panel') || localStorage.getItem('pnj_panel') || ''; } catch (e) {}
+  let days = 30, timer = null;
+
+  async function stats() {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/pnj_stats`, {
+      method: 'POST', headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_pass: pass, p_days: days })
+    });
+    const t = await r.text();
+    if (!r.ok) throw new Error(/bad password/.test(t) ? 'pass' : 'net');
+    return JSON.parse(t);
+  }
+
+  function showLogin(msg) {
+    $('app').hidden = true; $('login').hidden = false; $('loginErr').textContent = msg || '';
+    clearInterval(timer); setTimeout(() => $('pass').focus(), 50);
+  }
+  $('loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    pass = $('pass').value; $('loginErr').textContent = 'Entrando…';
+    try {
+      const d = await stats();
+      try { sessionStorage.setItem('pnj_panel', pass); if ($('remember').checked) localStorage.setItem('pnj_panel', pass); } catch (e) {}
+      start(d);
+    } catch (err) { $('loginErr').textContent = err.message === 'pass' ? 'Contraseña incorrecta.' : 'No se pudo conectar. Probá de nuevo.'; }
+  });
+  $('logout').onclick = () => { try { sessionStorage.removeItem('pnj_panel'); localStorage.removeItem('pnj_panel'); } catch (e) {} pass = ''; $('pass').value = ''; showLogin(); };
+
+  function start(d) {
+    $('login').hidden = true; $('app').hidden = false;
+    render(d);
+    clearInterval(timer); timer = setInterval(load, 60000);
+  }
+  async function load() {
+    try { render(await stats()); }
+    catch (err) { if (err.message === 'pass') showLogin('La contraseña cambió. Volvé a entrar.'); else $('updated').textContent = 'Sin conexión, reintentando…'; }
+  }
+  $('refresh').onclick = load;
+  $('period').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    days = +b.dataset.d;
+    [...$('period').children].forEach(x => x.classList.toggle('on', x === b));
+    load();
+  });
+
+  // ---------- dibujos ----------
+  function hbars(el, rows, opts = {}) {
+    el.innerHTML = '';
+    if (!rows.length) { el.innerHTML = '<div class="empty">Todavía no hay datos.</div>'; return; }
+    const max = Math.max(...rows.map(r => r.value), 1);
+    rows.slice(0, opts.limit || 10).forEach(r => {
+      const row = document.createElement('div');
+      row.className = 'hrow';
+      row.title = `${r.label}: ${fmt(r.value)}`;
+      row.innerHTML = `<div class="name">${esc(r.label)}</div><div class="track"><div class="fill" style="width:${(r.value / max * 100).toFixed(1)}%"></div></div><div class="val">${fmt(r.value)}</div>`;
+      el.appendChild(row);
+    });
+  }
+
+  // columnas (una sola serie) con tooltip
+  function columns(el, data, opts) {
+    const W = 720, H = opts.h || 220, padL = 34, padB = 22, padT = 8;
+    const max = Math.max(...data.map(d => d.v), 1);
+    const step = niceStep(max), top = Math.ceil(max / step) * step || 1;
+    const bw = (W - padL) / data.length, barW = Math.min(24, Math.max(3, bw - 4));
+    const y = v => padT + (H - padT - padB) * (1 - v / top);
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.label)}">`;
+    for (let v = 0; v <= top; v += step) s += `<line class="grid-line" x1="${padL}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text class="axis-text" x="${padL - 6}" y="${y(v) + 4}" text-anchor="end">${fmt(v)}</text>`;
+    data.forEach((d, i) => {
+      const x = padL + i * bw + (bw - barW) / 2, h = y(0) - y(d.v);
+      if (d.v > 0) {
+        const r = Math.min(4, barW / 2, h);
+        s += `<path class="bar" data-i="${i}" d="M${x},${y(0)} V${y(d.v) + r} Q${x},${y(d.v)} ${x + r},${y(d.v)} H${x + barW - r} Q${x + barW},${y(d.v)} ${x + barW},${y(d.v) + r} V${y(0)} Z"/>`;
+      }
+      if (d.tick) s += `<text class="axis-text" x="${x + barW / 2}" y="${H - 6}" text-anchor="middle">${esc(d.tick)}</text>`;
+      s += `<rect class="hit" data-i="${i}" x="${padL + i * bw}" y="${padT}" width="${bw}" height="${H - padT - padB}"/>`;
+    });
+    s += '</svg><div class="tip"></div>';
+    el.innerHTML = s;
+    const tip = el.querySelector('.tip'), svg = el.querySelector('svg');
+    el.querySelectorAll('.hit').forEach(h => {
+      const i = +h.dataset.i;
+      const show = () => {
+        const d = data[i], box = svg.getBoundingClientRect(), k = box.width / W;
+        tip.innerHTML = d.tip; tip.style.opacity = 1;
+        tip.style.left = ((padL + i * bw + bw / 2) * k) + 'px'; tip.style.top = (y(d.v) * k) + 'px';
+        el.querySelectorAll('.bar').forEach(b => b.classList.toggle('hover', +b.dataset.i === i));
+      };
+      h.addEventListener('mouseenter', show); h.addEventListener('touchstart', show, { passive: true });
+      h.addEventListener('mouseleave', () => { tip.style.opacity = 0; el.querySelectorAll('.bar').forEach(b => b.classList.remove('hover')); });
+    });
+  }
+  function niceStep(max) {
+    const raw = max / 4, p = Math.pow(10, Math.floor(Math.log10(raw || 1))), n = raw / p;
+    return Math.max(1, (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p);
+  }
+
+  const dayFmt = new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+  const dowFmt = new Intl.DateTimeFormat('es-AR', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+  const timeFmt = new Intl.DateTimeFormat('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Argentina/Buenos_Aires' });
+
+  function render(d) {
+    $('updated').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    $('tLive').textContent = fmt(d.en_vivo);
+    $('tToday').textContent = fmt(d.hoy_unicos);
+    $('tTodayMeta').textContent = `visitantes únicos · ${fmt(d.hoy_visitas)} visitas`;
+    $('tPeriodLabel').textContent = d.dias === 1 ? 'Hoy' : `Últimos ${d.dias} días`;
+    $('tPeriod').textContent = fmt(d.periodo_unicos);
+    $('tPeriodMeta').textContent = `visitantes únicos · ${fmt(d.periodo_visitas)} visitas`;
+    $('tTotal').textContent = fmt(d.total_unicos);
+
+    // por día
+    const pd = d.por_dia || [], every = Math.ceil(pd.length / 10);
+    columns($('cDays'), pd.map((x, i) => {
+      const dt = new Date(x.dia);
+      return { v: x.unicos, tick: (i % every === 0 || i === pd.length - 1) ? dayFmt.format(dt) : '',
+               tip: `<b>${esc(dowFmt.format(dt))}</b><br>${fmt(x.unicos)} visitantes · ${fmt(x.visitas)} visitas` };
+    }), { label: 'Visitantes por día' });
+
+    // por hora
+    columns($('cHours'), (d.por_hora || []).map(x => ({ v: x.visitas, tick: x.hora % 3 === 0 ? x.hora + 'h' : '',
+      tip: `<b>${x.hora}:00 a ${x.hora}:59</b><br>${fmt(x.visitas)} visitas` })), { label: 'Visitas por hora', h: 180 });
+
+    hbars($('cPages'), (d.paginas || []).map(x => ({ label: pageName(x.pagina), value: x.unicos })).sort((a, b) => b.value - a.value));
+
+    const byCountry = {};
+    (d.zonas || []).forEach(z => { const c = country(z.zona); const k = c.cc || '?'; byCountry[k] = byCountry[k] || { label: `${flag(c.cc)}  ${c.name}`, value: 0 }; byCountry[k].value += z.unicos; });
+    hbars($('cCountries'), Object.values(byCountry).sort((a, b) => b.value - a.value), { limit: 12 });
+
+    const byRef = {};
+    (d.origenes || []).forEach(o => { const n = refName(o.origen); byRef[n] = (byRef[n] || 0) + o.visitas; });
+    hbars($('cRefs'), Object.entries(byRef).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value));
+
+    hbars($('cDevices'), (d.dispositivos || []).map(x => ({ label: devName(x.dispositivo), value: x.unicos })));
+    hbars($('cLikes'), (d.me_gusta || []).map(x => ({ label: pageName(x.juego), value: x.likes })).filter(x => x.value > 0));
+    hbars($('cRecords'), (d.records || []).map(x => ({ label: `${pageName(x.juego)} (${fmt(x.jugadores)})`, value: x.cantidad })));
+
+    const rec = d.ultimos_records || [];
+    $('tRecords').innerHTML = rec.length
+      ? '<tr><th>Cuándo</th><th>Juego</th><th>Nombre</th><th>Puntaje</th></tr>' + rec.map(r =>
+          `<tr><td class="muted nw">${esc(timeFmt.format(new Date(r.cuando)))}</td><td>${esc(pageName(r.juego))}${r.modo ? ` <span class="muted">· ${esc(r.modo)}</span>` : ''}</td><td><b>${esc(r.nombre)}</b></td><td>${fmt(r.puntaje)}</td></tr>`).join('')
+      : '<tr><td class="empty">Todavía no hay récords.</td></tr>';
+
+    const g = (t, x) => `<div><b>${fmt(x.total)}</b><span>${t}: obras en total<br>${fmt(x.periodo)} en el período · ${fmt(x.votos)} votos</span></div>`;
+    $('cGalleries').innerHTML = g('Freezer.Craft', d.freezer || {}) + g('Pelusart', d.pelusart || {});
+
+    const vis = d.ultimas || [];
+    $('tVisits').innerHTML = vis.length
+      ? '<tr><th>Cuándo</th><th>Página</th><th>País</th><th>Desde</th></tr>' + vis.slice(0, 15).map(v => {
+          const c = country(v.zona);
+          return `<tr><td class="muted nw">${esc(timeFmt.format(new Date(v.ts)))}</td><td>${esc(pageName(v.pagina))}</td><td class="nw">${flag(c.cc)} ${esc(c.name)}</td><td class="muted">${esc(refName(v.origen))}</td></tr>`;
+        }).join('')
+      : '<tr><td class="empty">Todavía no hay visitas.</td></tr>';
+  }
+
+  if (pass) stats().then(start).catch(err => showLogin(err.message === 'pass' ? '' : 'No se pudo conectar.'));
+  else showLogin();
+})();
+</script>
+</body>
+</html>
